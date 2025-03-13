@@ -2,39 +2,55 @@ package ru.netology.sender;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import ru.netology.entity.Country;
-
+import ru.netology.entity.Location;
+import ru.netology.geo.GeoService;
+import ru.netology.i18n.LocalizationService;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
 public class MessageSenderImplTests {
 
-    @ParameterizedTest
-    @MethodSource
-    public void testSend(String name, String ip, String expected) {
+    @Test
+    public void testRuSend() {
 
-        GeoServiceMock geoServiceMock = new GeoServiceMock();
-        LocalizationServiceMock localizationServiceMock = new LocalizationServiceMock();
+        String ipAddress = "172.";
+        String expected = "Добро пожаловать";
+
+        GeoService geoServiceMock = Mockito.mock(GeoService.class);
+        Mockito.when(geoServiceMock.byIp(ipAddress)).thenReturn(new Location("Mock", Country.RUSSIA,"Mock",0));
+
+        LocalizationService localizationServiceMock = Mockito.mock(LocalizationService.class);
+        Mockito.when(localizationServiceMock.locale(Country.RUSSIA)).thenReturn("Добро пожаловать");
+
         MessageSenderImpl messageSender = new MessageSenderImpl(geoServiceMock, localizationServiceMock);
 
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(name, ip);
+        headers.put(MessageSenderImpl.IP_ADDRESS_HEADER, ipAddress);
         String result = messageSender.send(headers);
 
         Assertions.assertEquals(expected, result);
     }
 
-    public static Stream<Arguments> testSend() {
-        return Stream.of(
-                Arguments.of("x-real-ip", "1", "Добро пожаловать"),
-                Arguments.of("x-real-ip", "2", "Ola"),
-                Arguments.of("x-real-ip", "", "Welcome")
-        );
-    }
+    @Test
+    public void testUSAOrElseSend() {
 
+        String ipAddress = "127.0.0.1";
+        String expected = "Welcome";
+
+        GeoService geoServiceMock = Mockito.mock(GeoService.class);
+        Mockito.when(geoServiceMock.byIp(ipAddress)).thenReturn(new Location("Mock", Country.USA,"Mock", 0));
+
+        LocalizationService localizationServiceMock = Mockito.mock(LocalizationService.class);
+        Mockito.when(localizationServiceMock.locale(Country.USA)).thenReturn("Welcome");
+
+        MessageSenderImpl messageSender = new MessageSenderImpl(geoServiceMock, localizationServiceMock);
+
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put(MessageSenderImpl.IP_ADDRESS_HEADER, ipAddress);
+        String result = messageSender.send(headers);
+
+        Assertions.assertEquals(expected, result);
+    }
 }

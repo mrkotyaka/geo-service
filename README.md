@@ -1,3 +1,3 @@
-# Сервис отправки локализованных сообщений
+# Localized message sending service
 
-В классе Main, создается тестовая отправка сообщения в консоль
+In the Main class, a test message is sent to the console.
